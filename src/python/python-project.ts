@@ -8,21 +8,87 @@ import { Pytest, PytestOptions } from "./pytest";
 import { PytestSample } from "./pytest-sample";
 import { IPythonDeps } from "./python-deps";
 import { IPythonEnv } from "./python-env";
-import { IPythonPackaging, PythonPackagingOptions } from "./python-packaging";
+import { IPythonPackaging, PyProjectOptions } from "./python-packaging";
 import { PythonSample } from "./python-sample";
 import { Setuptools } from "./setuptools";
 import { Venv, VenvOptions } from "./venv";
+import { Component } from "../component";
+import { DependencyType } from "../dependencies";
 import { GitHubProject, GitHubProjectOptions } from "../github";
 import {
   Projenrc as ProjenrcJs,
   ProjenrcOptions as ProjenrcJsOptions,
 } from "../javascript/projenrc";
-import { ProjectType } from "../project";
+import { Project, ProjectType } from "../project";
+import { TomlFile } from "../toml";
 import { ProjenrcTs, ProjenrcTsOptions } from "../typescript";
-import { anySelected, multipleSelected } from "../util";
+import {
+  anySelected,
+  decamelizeKeysRecursively,
+  multipleSelected,
+} from "../util";
 
 /** Allowed characters in python project names */
 const PYTHON_PROJECT_NAME_REGEX = /^[A-Za-z0-9-_\.]+$/;
+
+/**
+ * Represents configuration of a pyproject.toml file for a Poetry project.
+ *
+ * @see https://python-poetry.org/docs/pyproject/
+ */
+export class PyProjectToml extends Component {
+  public readonly file: TomlFile;
+
+  constructor(project: Project, options: PyProjectOptions) {
+    super(project);
+
+    const { dependencies, devDependencies, ...otherOptions } = options;
+    const decamelizedOptions = decamelizeKeysRecursively(otherOptions);
+
+    const tomlStructure: any = {
+      tool: {
+        poetry: {
+          ...decamelizedOptions,
+          dependencies: this.synthDependencies(),
+          group: {
+            dev: {
+              dependencies: this.synthDevDependencies(),
+            },
+          },
+        },
+      },
+      "build-system": {
+        requires: ["poetry-core"],
+        "build-backend": "poetry.core.masonry.api",
+      },
+    };
+
+    this.file = new TomlFile(project, "pyproject.toml", {
+      omitEmpty: false,
+      obj: tomlStructure,
+    });
+  }
+
+  private synthDependencies() {
+    const dependencies: { [key: string]: any } = {};
+    for (const pkg of this.project.deps.all) {
+      if (pkg.type === DependencyType.RUNTIME) {
+        dependencies[pkg.name] = pkg.version ?? "*";
+      }
+    }
+    return dependencies;
+  }
+
+  private synthDevDependencies() {
+    const dependencies: { [key: string]: any } = {};
+    for (const pkg of this.project.deps.all) {
+      if ([DependencyType.DEVENV, DependencyType.TEST].includes(pkg.type)) {
+        dependencies[pkg.name] = pkg.version ?? "*";
+      }
+    }
+    return dependencies;
+  }
+}
 
 export interface PythonExecutableOptions {
   /**
@@ -37,7 +103,7 @@ export interface PythonExecutableOptions {
  */
 export interface PythonProjectOptions
   extends GitHubProjectOptions,
-    PythonPackagingOptions,
+    PyProjectOptions,
     PythonExecutableOptions {
   // -- required options --
 

@@ -1,7 +1,7 @@
 import * as TOML from "@iarna/toml";
 import { IPythonDeps } from "./python-deps";
 import { IPythonEnv } from "./python-env";
-import { IPythonPackaging, PythonPackagingOptions } from "./python-packaging";
+import { IPythonPackaging, PyProjectOptions } from "./python-packaging";
 import { PythonExecutableOptions } from "./python-project";
 import { Component } from "../component";
 import { DependencyType } from "../dependencies";
@@ -12,7 +12,7 @@ import { TomlFile } from "../toml";
 import { decamelizeKeysRecursively, exec, execOrUndefined } from "../util";
 
 export interface PoetryOptions
-  extends PythonPackagingOptions,
+  extends PyProjectOptions,
     PythonExecutableOptions {}
 
 /**
@@ -256,7 +256,7 @@ export class Poetry
  * Poetry-specific options.
  * @see https://python-poetry.org/docs/pyproject/
  */
-export interface PoetryPyprojectOptionsWithoutDeps {
+export interface PoetryPyprojectFileOptionsWithoutDeps {
   /**
    * Name of the package (required).
    */
@@ -373,7 +373,7 @@ export interface PoetryPyprojectOptionsWithoutDeps {
  * @see https://python-poetry.org/docs/pyproject/
  */
 export interface PoetryPyprojectOptions
-  extends PoetryPyprojectOptionsWithoutDeps {
+  extends PoetryPyprojectFileOptionsWithoutDeps {
   /**
    * A list of dependencies for the project.
    *

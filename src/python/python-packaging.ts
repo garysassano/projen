@@ -1,4 +1,4 @@
-import { PoetryPyprojectOptionsWithoutDeps } from "./poetry";
+import { PoetryPyprojectFileOptionsWithoutDeps as PoetryPyprojectOptionsWithoutDeps } from "./poetry";
 import { Task } from "../task";
 
 export interface IPythonPackaging {
@@ -8,7 +8,7 @@ export interface IPythonPackaging {
   readonly publishTask: Task;
 }
 
-export interface PythonPackagingOptions {
+export interface PyProjectOptions {
   /**
    * Author's name
    *
@@ -58,6 +58,24 @@ export interface PythonPackagingOptions {
    * @see https://pypi.org/classifiers/
    */
   readonly classifiers?: string[];
+
+  /**
+   * A list of dependencies for the project.
+   *
+   * Dependencies use the format: `<module>@<semver>`
+   *
+   * @default []
+   */
+  readonly dependencies?: string[];
+
+  /**
+   * A list of dev dependencies for the project.
+   *
+   * Dependencies use the format: `<module>@<semver>`
+   *
+   * @default []
+   */
+  readonly devDependencies?: string[];
 
   /**
    * Additional fields to pass in the setup() function if using setuptools
